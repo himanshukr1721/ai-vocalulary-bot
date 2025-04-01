@@ -2,22 +2,20 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-
-db = SQLAlchemy()
+from app import db
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
     interests = db.Column(db.String(255), nullable=True)
-    preferred_difficulty = db.Column(db.String(20), default='intermediate')
-    
-    # Relationship with other models
-    daily_words = db.relationship('DailyWord', backref='user', lazy=True)
-    quiz_attempts = db.relationship('QuizAttempt', backref='user', lazy=True)
+    preferred_difficulty = db.Column(db.String(50), nullable=True)
     learning_streak = db.Column(db.Integer, default=0)
     last_activity_date = db.Column(db.DateTime, nullable=True)
+    
+    quiz_attempts = db.relationship('QuizAttempt', backref='user', lazy=True)
+    daily_words = db.relationship('DailyWord', backref='user', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

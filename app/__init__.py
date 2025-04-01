@@ -8,7 +8,7 @@ db = SQLAlchemy()
 
 # Initialize LoginManager
 login_manager = LoginManager()
-login_manager.login_view = 'login'
+login_manager.login_view = 'main.login'
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -18,7 +18,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     login_manager.init_app(app)
     
-    # Import routes to avoid circular imports
+    # Import and register blueprints
     from app.routes import bp as routes_bp
     app.register_blueprint(routes_bp)
     

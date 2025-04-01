@@ -7,18 +7,35 @@ from app.ai_services import GeminiAIService
 from config import Config
 import json
 from datetime import datetime
-
+from app import db
 # Create blueprint
 bp = Blueprint('main', __name__)
 
 # Initialize AI service
 ai_service = None
 
-@bp.before_app_first_request
+def get_ai_service():
+    """Get or create AI service instance"""
+    global ai_service
+    if ai_service is None:
+        try:
+            if not Config.GEMINI_API_KEY:
+                raise ValueError("GEMINI_API_KEY is not set in environment variables")
+            ai_service = GeminiAIService(Config.GEMINI_API_KEY)
+        except Exception as e:
+            print(f"Error initializing AI service: {str(e)}")
+            flash(f"Error initializing AI service: {str(e)}", "error")
+            return None
+    return ai_service
+
+@bp.before_app_request
 def before_first_request():
     """Initialize services when the app starts"""
-    global ai_service
-    ai_service = GeminiAIService(Config.GEMINI_API_KEY)
+    try:
+        get_ai_service()
+    except Exception as e:
+        print(f"Error in before_first_request: {str(e)}")
+        # Don't flash here as it might be too early in the request cycle
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -32,32 +49,17 @@ def index():
 def signup():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
-        
+    
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        interests = request.form.get('interests', 'general')
-        difficulty = request.form.get('difficulty', Config.DEFAULT_WORD_DIFFICULTY)
         
-        # Check if user already exists
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-            return redirect(url_for('main.signup'))
-            
-        if User.query.filter_by(email=email).first():
-            flash('Email already exists')
-            return redirect(url_for('main.signup'))
-        
-        # Create new user
-        new_user = User(
-            username=username, 
-            email=email, 
-            interests=interests,
-            preferred_difficulty=difficulty
-        )
+        # Create a new user and set the password
+        new_user = User(username=username, email=email)
         new_user.set_password(password)
         
+        # Save the user to the database
         db.session.add(new_user)
         db.session.commit()
         
@@ -70,22 +72,20 @@ def signup():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
-        
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         
+        # Retrieve the user from the database
         user = User.query.filter_by(username=username).first()
         
+        # Check if the user exists and the password is correct
         if user and user.check_password(password):
-            login_user(user, remember=True)
-            user.update_learning_streak()
-            db.session.commit()
-            
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('main.dashboard'))
-        
-        flash('Invalid username or password')
+            login_user(user)
+            return redirect(url_for('main.dashboard'))
+        else:
+            flash('Invalid username or password')
     
     return render_template('login.html')
 
@@ -99,6 +99,19 @@ def logout():
 @bp.route('/dashboard')
 @login_required
 def dashboard():
+    # Get AI service
+    ai_service = get_ai_service()
+    if not ai_service:
+        flash("AI service is currently unavailable. Please try again later.", "error")
+        return render_template('dashboard.html', 
+                             word_data=None,
+                             quiz_questions=None,
+                             previous_words=[],
+                             quiz_history=[],
+                             learning_streak=current_user.learning_streak,
+                             current_quiz_completed=False,
+                             quiz_score=None)
+
     # Check if the user already has a word for today
     today = datetime.utcnow().date()
     daily_word = DailyWord.query.filter(
@@ -108,36 +121,47 @@ def dashboard():
     
     # If no word for today, generate a new one
     if not daily_word:
-        # Get user's daily word
-        word_data = ai_service.generate_daily_word(
-            current_user.interests or Config.DEFAULT_USER_INTERESTS, 
-            current_user.preferred_difficulty or Config.DEFAULT_WORD_DIFFICULTY
-        )
-        
-        # Generate quiz questions
-        quiz_questions = ai_service.generate_quiz_questions(word_data['word'])
-        
-        # Save daily word to database
-        daily_word = DailyWord(
-            user_id=current_user.id,
-            word=word_data['word'],
-            meaning=word_data['meaning'],
-            synonyms=', '.join(word_data.get('synonyms', [])),
-            antonyms=', '.join(word_data.get('antonyms', [])),
-            example_sentence=word_data['example_sentence'],
-            rephrased_meaning=word_data['rephrased_meaning']
-        )
-        db.session.add(daily_word)
-        
-        # Save quiz attempt to database
-        quiz_attempt = QuizAttempt(
-            user_id=current_user.id,
-            word=word_data['word'],
-            quiz_questions=json.dumps(quiz_questions)
-        )
-        db.session.add(quiz_attempt)
-        
-        db.session.commit()
+        try:
+            # Get user's daily word
+            word_data = ai_service.generate_daily_word(
+                current_user.interests or Config.DEFAULT_USER_INTERESTS, 
+                current_user.preferred_difficulty or Config.DEFAULT_WORD_DIFFICULTY
+            )
+            
+            # Generate quiz questions
+            quiz_questions = ai_service.generate_quiz_questions(word_data['word'])
+            
+            # Save daily word to database
+            daily_word = DailyWord(
+                user_id=current_user.id,
+                word=word_data['word'],
+                meaning=word_data['meaning'],
+                synonyms=', '.join(word_data.get('synonyms', [])),
+                antonyms=', '.join(word_data.get('antonyms', [])),
+                example_sentence=word_data['example_sentence'],
+                rephrased_meaning=word_data['rephrased_meaning']
+            )
+            db.session.add(daily_word)
+            
+            # Save quiz attempt to database
+            quiz_attempt = QuizAttempt(
+                user_id=current_user.id,
+                word=word_data['word'],
+                quiz_questions=json.dumps(quiz_questions)
+            )
+            db.session.add(quiz_attempt)
+            
+            db.session.commit()
+        except Exception as e:
+            flash(f"Error generating daily word: {str(e)}", "error")
+            return render_template('dashboard.html', 
+                                 word_data=None,
+                                 quiz_questions=None,
+                                 previous_words=[],
+                                 quiz_history=[],
+                                 learning_streak=current_user.learning_streak,
+                                 current_quiz_completed=False,
+                                 quiz_score=None)
     else:
         # Convert to dictionary format for template
         word_data = {
@@ -159,16 +183,20 @@ def dashboard():
         if quiz_attempt:
             quiz_questions = json.loads(quiz_attempt.quiz_questions)
         else:
-            # Generate new quiz questions if none exist
-            quiz_questions = ai_service.generate_quiz_questions(daily_word.word)
-            
-            quiz_attempt = QuizAttempt(
-                user_id=current_user.id,
-                word=daily_word.word,
-                quiz_questions=json.dumps(quiz_questions)
-            )
-            db.session.add(quiz_attempt)
-            db.session.commit()
+            try:
+                # Generate new quiz questions if none exist
+                quiz_questions = ai_service.generate_quiz_questions(daily_word.word)
+                
+                quiz_attempt = QuizAttempt(
+                    user_id=current_user.id,
+                    word=daily_word.word,
+                    quiz_questions=json.dumps(quiz_questions)
+                )
+                db.session.add(quiz_attempt)
+                db.session.commit()
+            except Exception as e:
+                flash(f"Error generating quiz questions: {str(e)}", "error")
+                quiz_questions = None
     
     # Get previous learned words and quiz history
     previous_words = DailyWord.query.filter_by(user_id=current_user.id).order_by(DailyWord.date_learned.desc()).limit(10).all()

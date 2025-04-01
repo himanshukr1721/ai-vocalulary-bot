@@ -3,7 +3,7 @@
 {% block content %}
 <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
     <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
-    <form method="POST" action="{{ url_for('login') }}">
+    <form method="POST" action="{{ url_for('main.login') }}">
         <div class="mb-4">
             <label class="block text-gray-700 mb-2">Username</label>
             <input type="text" name="username" required class="w-full px-3 py-2 border rounded-lg">
@@ -14,6 +14,6 @@
         </div>
         <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Login</button>
     </form>
-    <p class="text-center mt-4">Don't have an account? <a href="{{ url_for('signup') }}" class="text-blue-600">Sign Up</a></p>
+    <p class="text-center mt-4">Don't have an account? <a href="{{ url_for('main.signup') }}" class="text-blue-600">Sign Up</a></p>
 </div>
 {% endblock %}
