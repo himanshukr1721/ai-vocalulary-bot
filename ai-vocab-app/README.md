@@ -3,6 +3,10 @@
 ## Overview
 This is an AI-powered vocabulary website that generates random words and provides their meanings, synonyms, and antonyms. It utilizes the **Gemini API** for word generation and is built using **Next.js**.
 
+### Live Demo
+Check out the deployed project here: [AI Vocabulary Website](https://ai-vocalulary-bot-oyac.vercel.app/)
+
+
 ## Features
 - Generate random words.
 - Fetch word meanings, synonyms, and antonyms.
