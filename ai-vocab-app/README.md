@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Vocabulary Website
 
-## Getting Started
+## Overview
+This is an AI-powered vocabulary website that generates random words and provides their meanings, synonyms, and antonyms. It utilizes the **Gemini API** for word generation and is built using **Next.js**.
 
-First, run the development server:
+## Features
+- Generate random words.
+- Fetch word meanings, synonyms, and antonyms.
+- Fast and responsive UI.
+- Built using **Next.js** for a seamless experience.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Technologies Used
+- **Next.js** (React Framework)
+- **Gemini API** (for word generation and definitions)
+- **Tailwind CSS** (for styling)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Installation
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-username/ai-vocabulary-bot.git
+   ```
+2. Navigate to the project folder:
+   ```sh
+   cd ai-vocab-app
+   ```
+3. Install dependencies:
+   ```sh
+   npm install
+   ```
+4. Create a `.env.local` file and add your **Gemini API key**:
+   ```env
+   NEXT_PUBLIC_GEMINI_API_KEY=your_api_key_here
+   ```
+5. Start the development server:
+   ```sh
+   npm run dev
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
+You can deploy this Next.js app on **Vercel** or any other hosting platform that supports Next.js.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Usage
+- Click on the "Generate Word" button to fetch a new word.
+- View the meaning, synonyms, and antonyms displayed on the screen.
 
-## Learn More
+## Contributing
+If you'd like to contribute:
+- Fork the repository
+- Create a new branch
+- Make your changes and submit a pull request
 
-To learn more about Next.js, take a look at the following resources:
+## License
+This project is licensed under the **MIT License**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contact
+For any issues or suggestions, feel free to reach out at **himanshukr5674@gmail.com**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
