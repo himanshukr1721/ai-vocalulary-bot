@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server"
-import { generateText } from "ai"
-import { google } from "@ai-sdk/google"
 import {GoogleGenAI} from '@google/genai';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY as string
 if(!GEMINI_API_KEY) {
