@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from google import genai
 import json
 from typing import Dict, List
 from google.api_core import exceptions
@@ -11,13 +11,13 @@ class GeminiAIService:
         
         try:
             # Configure the Gemini API
-            genai.configure(api_key=api_key)
+            self.client = genai.Client(api_key=api_key)
             
-            # Initialize the model
-            self.model = genai.GenerativeModel('gemini-2.0-flash')
-            
-            # Test the configuration with a simple prompt
-            response = self.model.generate_content("Test")
+            # Test connection with gemini-2.0-flash model
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=["Test connection"]
+            )
             if not response:
                 raise ValueError("Failed to get response from model")
                 
@@ -47,7 +47,10 @@ class GeminiAIService:
         """
         
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=[prompt]
+            )
             if not response or not response.text:
                 raise ValueError("Empty response from model")
                 
@@ -93,7 +96,10 @@ class GeminiAIService:
         """
         
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=[prompt]
+            )
             if not response or not response.text:
                 raise ValueError("Empty response from model")
                 
