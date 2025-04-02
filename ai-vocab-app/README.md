@@ -29,7 +29,7 @@ This is an AI-powered vocabulary website that generates random words and provide
    ```
 4. Create a `.env.local` file and add your **Gemini API key**:
    ```env
-   NEXT_PUBLIC_GEMINI_API_KEY=your_api_key_here
+   GEMINI_API_KEY=your_api_key_here
    ```
 5. Start the development server:
    ```sh
